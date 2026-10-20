@@ -696,6 +696,7 @@ const messagesRef = ref(db, "messages");
 const messagesQuery = query(messagesRef, limitToLast(100));
 const LASTFM_KEY = "c08ea0f29eef2eec1c27b99a86afe75d";
 const OWNER = "wolf";
+const BOOKMARKED = ["echidna", "navidson", "shirou"];
 
 const $ = id => document.getElementById(id);
 const tw = el => window.twemoji && twemoji.parse(el, { folder: "svg", ext: ".svg" });
@@ -932,6 +933,8 @@ function paint(el) {
   const n = el.querySelector(".name");
   n.textContent = p.displayName || el.dataset.name; n.style.color = hex(p.nameColor);
   if (el.dataset.name === OWNER) { const s = document.createElement("span"); s.className = "owner-star"; s.dataset.tip = "owner"; s.textContent = "★"; n.append(s); }
+  if (BOOKMARKED.includes(String(el.dataset.name).trim().toLowerCase())) { const s = document.createElement("span"); s.className = "owner-star"; s.dataset.tip = "of the record"; s.textContent = "🔖"; n.append(s); }
+  tw(n);
   tw(n);
   const bb = el.querySelector(".bubble");
   bb.style.background = safeImg(p.bubImg) ? `linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.4)),url("${p.bubImg}") center/cover` : hex(p.bubColor);
