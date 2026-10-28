@@ -86,12 +86,22 @@ button.sel{background:#f3efe3;color:#101827;border-color:#f3efe3}
 <div id="mid"><div id="tbl"><svg class="ring" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M182.7 130.1A88 88 0 0 1 17.3 130.1"/><path d="M17.3 69.9A88 88 0 0 1 182.7 69.9"/></g><g fill="currentColor"><polygon points="13.2,118.8 9.8,132.8 24.8,127.4"/><polygon points="186.8,81.2 190.2,67.2 175.2,72.6"/></g></svg><div id="deck"></div><div id="pile"></div></div><div id="info"></div><div id="log"></div></div>
 <div id="acts"><b id="me"></b><button id="bd" hidden>draw</button><button id="bp" hidden>pass</button></div><div id="hand"></div></div>
 <div class="scr" id="menu"><div class="pn" id="mp"></div></div><div class="scr" id="pick" hidden><div class="pn"><h2>choose a color</h2><div class="row" id="pr"></div></div></div><div class="scr" id="win" hidden><div class="pn" id="wp"></div></div>
-<script>
+<script type="module">
 const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e},R=n=>Math.random()*n|0,pk=a=>a[R(a.length)],esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* light side: R Y G B   dark side: P(ink) T(eal) O(range) U(purple) */
 const CC={R:'#ee2229',Y:'#ffd400',G:'#1ea34b',B:'#0a5bc4',P:'#e8479b',T:'#16a9a0',O:'#f28a1f',U:'#7a45c2'},CN={R:'red',Y:'yellow',G:'green',B:'blue',P:'pink',T:'teal',O:'orange',U:'purple'},SC={L:'RYGB',D:'PTOU'};
 let B=null;try{B=parent.__wcBridge||null}catch{}
+const wcWarn=e=>{console.error(e);let d=document.getElementById('wcerr')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'wcerr',style:'position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#7f1d1d;color:#fff;padding:8px 12px;border-radius:10px;font:12px system-ui'}));d.textContent='online error: '+(e&&(e.code||e.message)||e)+' (path games/ext_unoflip)'};
+/* wolfchat bridge: when this page is not given one by the parent, connect to the same firebase project + signed-in account on our own */
+if(!B)try{const act=localStorage.getItem('wc_active')||'main',pf=act==='main'?'wc_profile':'wc_profile_'+act;let p=null;try{p=JSON.parse(localStorage.getItem(pf))}catch{}
+ const nm=String(p&&p.name||'').replace(/[^\w-]/g,'');
+ if(nm){const U='https://www.gstatic.com/firebasejs/10.12.2/',[A,D,Au]=await Promise.all([import(U+'firebase-app.js'),import(U+'firebase-database.js'),import(U+'firebase-auth.js')]);
+  const C={apiKey:'AIzaSyBg5DGLubsHuH3ub3AtzpRenSMH6x1hZPs',authDomain:'wolfchatlol.firebaseapp.com',databaseURL:'https://wolfchatlol-default-rtdb.firebaseio.com',projectId:'wolfchatlol',appId:'1:654485297853:web:b1b93e7d7cef780fd275d4'};
+  const app=act==='main'?A.initializeApp(C):A.initializeApp(C,act),au=Au.getAuth(app);
+  try{await Promise.race([au.authStateReady(),new Promise(r=>setTimeout(r,4000))])}catch{}
+  B={name:()=>nm,disp:n=>n,path:()=>'games/ext_unoflip',post:()=>{},fb:{db:D.getDatabase(app),ref:D.ref,push:D.push,set:D.set,update:D.update,runTransaction:D.runTransaction,onValue:(r,cb,er)=>D.onValue(r,cb,er||wcWarn)}}}}catch(e){console.error(e);B=null}
+
 const me=B?B.name():'you',isBot=n=>n.endsWith('(bot)'),dn=n=>B&&!isBot(n)?B.disp(n):n;
 /* weights: number, skip, reverse, draw, flip, wild, wild-draw */
 const TI=[{id:'god',n:'overpowered',i:'👑',c:'#ffd23f',w:[22,12,10,14,12,8,22],p:18},{id:'str',n:'strong',i:'🔥',c:'#ff7a2f',w:[40,10,9,12,9,6,14],p:22},{id:'mid',n:'balanced',i:'⚖️',c:'#7fd0ff',w:[60,8,8,8,7,4,5],p:28},{id:'weak',n:'weak',i:'🪨',c:'#9aa7bd',w:[82,5,4,4,3,1,1],p:20},{id:'bad',n:'cursed',i:'💀',c:'#b36cff',w:[96,2,1,1,0,0,0],p:12},{id:'basic',n:'basic',i:'🃏',c:'#c9d4ea',w:[88,4,3,3,2,0,0],p:0}];
@@ -236,7 +246,7 @@ function botTurn(x=0){if(O||!G||G.st!=='live'||G.turn===me)return;const b=G.turn
  onState(G)},900+R(600)+x)}
 /* ---- online ---- */
 /* ---- online ---- */
-const tx=(r,f)=>B.fb.runTransaction(r,cur=>cur?(f(cur)||undefined):cur).catch(()=>{});
+const tx=(r,f)=>B.fb.runTransaction(r,cur=>cur?(f(cur)||undefined):cur).catch(wcWarn);
 function attach(id){const{db,ref,onValue}=B.fb;O={id,r:ref(db,B.path()+'/'+id)};lastEv=null;offs.push(onValue(O.r,s=>{const g=s.val();if(!g){O=null;G=null;return menu()}onState(g)}))}
 function host(){const{db,ref,push,set}=B.fb,id=push(ref(db,B.path())).key;set(ref(db,B.path()+'/'+id),{st:'lobby',host:me,stack:stackSel,ord:[me],ts:Date.now()});attach(id);B.post(`**${dn(me)}** opened a UNO FLIP! table. open settings > games > uno flip to join (2-6 players)`)}
 function goOnline(){if(!B){$('#mp').innerHTML='<h2>online needs wolfchat</h2><p>open this game from the games tab.</p><button id=bk>back</button>';$('#bk').onclick=menu;return}const{db,ref,onValue}=B.fb;offs.forEach(f=>f());offs=[];let done=0;lobbyList();
