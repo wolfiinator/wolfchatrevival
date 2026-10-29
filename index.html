@@ -407,12 +407,101 @@ select{width:100%;padding:8px;background:#000;color:var(--tx);border:2px solid v
 :root[data-light] #ubDot{border-color:color-mix(in srgb,var(--bg) 85%,#fff)}
 :root[data-light] #loading,:root[data-light] #first,:root[data-light] #auth{background:color-mix(in srgb,var(--bg1) 96%,transparent)}
 :root[data-light] .frow:hover,:root[data-light] #ubMain:hover{background:rgba(0,0,0,.06)}
+
+/* ===== wolflock: pattern lock ===== */
+#lock{--lk:var(--glow);--cell:min(104px,24vw,17vh);position:fixed;inset:0;z-index:99999;background:#000;overflow:hidden;color:var(--tx);font-family:inherit;touch-action:none;user-select:none;-webkit-user-select:none;opacity:1;visibility:visible;transition:opacity .9s ease,visibility 0s}
+#lock.gone{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 1s ease,visibility 0s 1s}
+#lock[data-s=bad]{--lk:#ef4444}#lock[data-s=ok]{--lk:#4ade80}
+.lk-shake{position:absolute;inset:-30px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--lk) 16%,#000),#000 68%);transition:opacity .8s ease,background .5s}
+#lock.fadeblack .lk-shake{opacity:0}
+.lk-shake.shake{animation:lkShake .62s cubic-bezier(.36,.07,.19,.97)}
+.lk-shake.nudge{animation:lkNudge .4s ease}
+@keyframes lkShake{0%,100%{transform:none}10%{transform:translate(-26px,3px) rotate(-.8deg)}22%{transform:translate(24px,-3px) rotate(.7deg)}34%{transform:translate(-20px,2px) rotate(-.5deg)}46%{transform:translate(16px,-2px) rotate(.4deg)}58%{transform:translate(-11px,1px)}70%{transform:translate(8px,0)}82%{transform:translate(-4px,0)}}
+@keyframes lkNudge{25%{transform:translateX(-9px)}50%{transform:translateX(9px)}75%{transform:translateX(-5px)}}
+#lkFx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.lk-glow{position:absolute;width:76vmin;height:76vmin;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--lk) 38%,transparent),transparent 66%);filter:blur(28px);animation:lkGlow 5s ease-in-out infinite;pointer-events:none;transition:background .4s}
+@keyframes lkGlow{0%,100%{transform:scale(.88);opacity:.55}50%{transform:scale(1.08);opacity:1}}
+#lock[data-s=ok] .lk-glow{animation:lkFlash 1s ease-out}
+#lock[data-s=bad] .lk-glow{animation:lkFlash .6s ease-out}
+@keyframes lkFlash{0%{transform:scale(.8);opacity:.6}30%{transform:scale(1.6);opacity:1}100%{transform:scale(1.1);opacity:.8}}
+.lk-stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,2vh,16px);animation:lkIn 1.4s cubic-bezier(.2,.8,.2,1) both;text-align:center;padding:10px}
+@keyframes lkIn{from{opacity:0;transform:translateY(14px) scale(.96);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+.lk-logo{font-size:clamp(22px,5.5vmin,36px);letter-spacing:3px;color:#fff;text-shadow:0 0 10px var(--lk),0 0 28px var(--lk);animation:lkFlick 5s infinite}
+.lk-logo span{color:var(--lk)}
+@keyframes lkFlick{0%,91%,100%{opacity:1}93%{opacity:.55}95%{opacity:1}97%{opacity:.7}}
+.lk-sub,.lk-msg{font-size:clamp(10px,2.4vmin,13px);letter-spacing:1px;min-height:1.4em;text-transform:lowercase}
+.lk-sub{opacity:.85}
+.lk-msg{color:color-mix(in srgb,var(--lk) 70%,#fff);text-shadow:0 0 10px var(--lk)}
+.pop{animation:lkTxt .45s ease both}
+@keyframes lkTxt{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+.lk-wrap{position:relative;margin:clamp(22px,4.5vh,34px);opacity:0;transform:scale(.9);transition:opacity .9s .25s,transform .9s .25s cubic-bezier(.2,1.2,.4,1),filter .5s}
+#lock.ready .lk-wrap{opacity:1;transform:none}
+#lock.out .lk-wrap{opacity:.18;filter:grayscale(.7) blur(1px);pointer-events:none;transition-delay:0s}
+.lk-ring{position:absolute;inset:-28px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,var(--lk));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:lkSpin 5s linear infinite;opacity:.7;filter:drop-shadow(0 0 7px var(--lk));pointer-events:none}
+.lk-ring.r2{inset:-14px;background:none;-webkit-mask:none;mask:none;border:1px dashed color-mix(in srgb,var(--lk) 55%,transparent);animation:lkSpin 22s linear infinite reverse;opacity:.55;filter:none}
+@keyframes lkSpin{to{transform:rotate(360deg)}}
+.lk-grid{position:relative;display:grid;grid-template-columns:repeat(3,var(--cell));grid-template-rows:repeat(3,var(--cell));touch-action:none;cursor:pointer}
+.lk-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.lk-svg polyline,.lk-svg line{fill:none;stroke:var(--lk);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--lk)) drop-shadow(0 0 13px var(--lk));transition:stroke .3s,stroke-width .3s}
+.lk-svg line{opacity:0;stroke-opacity:.55}
+#lock[data-s=ok] .lk-svg polyline{stroke:#eafff1;stroke-width:8}
+.lk-dot{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;opacity:0;font-style:normal}
+#lock.ready .lk-dot{animation:lkPop .7s cubic-bezier(.2,1.7,.4,1) both;animation-delay:calc(.35s + var(--i)*65ms)}
+@keyframes lkPop{from{opacity:0;transform:scale(0) rotate(-90deg)}to{opacity:1;transform:none}}
+.lk-dot .core{display:block;width:clamp(11px,2.6vmin,17px);height:clamp(11px,2.6vmin,17px);border-radius:50%;background:var(--lk);box-shadow:0 0 10px var(--lk),0 0 26px color-mix(in srgb,var(--lk) 65%,transparent);transition:transform .3s cubic-bezier(.2,1.8,.4,1),background .3s,box-shadow .3s;animation:lkBreath 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*.27s)}
+@keyframes lkBreath{0%,100%{transform:scale(.85)}50%{transform:scale(1.15)}}
+.lk-dot .halo{position:absolute;width:calc(var(--cell)*.58);height:calc(var(--cell)*.58);border-radius:50%;border:2px solid var(--lk);opacity:0;transform:scale(.3);transition:opacity .25s,transform .35s cubic-bezier(.2,1.6,.4,1),border-color .3s;box-shadow:0 0 20px var(--lk),inset 0 0 14px color-mix(in srgb,var(--lk) 60%,transparent)}
+.lk-dot.on .core{animation:none;transform:scale(1.9);background:#fff;box-shadow:0 0 14px #fff,0 0 34px var(--lk),0 0 60px var(--lk)}
+.lk-dot.on .halo{opacity:1;transform:scale(1)}
+.lk-dot .rip{position:absolute;width:20px;height:20px;border-radius:50%;border:2px solid var(--lk);pointer-events:none;animation:lkRip .75s ease-out forwards}
+@keyframes lkRip{to{transform:scale(5.5);opacity:0}}
+.lk-shock{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px;border-radius:50%;border:3px solid var(--lk);box-shadow:0 0 30px var(--lk),inset 0 0 30px var(--lk);pointer-events:none;animation:lkShock 1.1s ease-out forwards}
+@keyframes lkShock{to{transform:scale(22);opacity:0}}
+.lk-pips{display:flex;gap:6px;opacity:0;transition:opacity .6s .6s}
+#lock.ready .lk-pips{opacity:1}.lk-pips[hidden]{display:none}
+.lk-pips i{width:8px;height:8px;border-radius:50%;background:var(--lk);box-shadow:0 0 8px var(--lk);transition:all .4s cubic-bezier(.2,1.6,.4,1)}
+.lk-pips i.used{background:#222;box-shadow:none;transform:scale(.6);opacity:.5}
+.lk-pips.low i:not(.used){background:#ef4444;box-shadow:0 0 9px #ef4444;animation:lkBreath 1s infinite}
+.lk-count{font-size:clamp(30px,9vmin,56px);letter-spacing:4px;color:#fff;text-shadow:0 0 14px var(--lk),0 0 36px var(--lk);font-variant-numeric:tabular-nums;animation:lkBreath 2s ease-in-out infinite}.lk-count:empty{display:none}
+#lkBtn,#lkSkip{margin-top:4px;background:rgba(0,0,0,.4);border-color:color-mix(in srgb,var(--lk) 60%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--lk) 30%,transparent)}
+#lkBtn[hidden],#lkSkip[hidden]{display:none}
+body.wc-reveal .app{animation:wcIn 1.6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes wcIn{from{opacity:0;transform:scale(1.025);filter:blur(10px) brightness(.35)}to{opacity:1;transform:none;filter:none}}
+/* protection tab */
+.tab[hidden]{display:none}
+#prLock{font-size:44px;text-align:center;margin:6px 0 2px;filter:drop-shadow(0 0 10px var(--glow));animation:prFloat 3s ease-in-out infinite}
+#prLock.on{filter:drop-shadow(0 0 14px #4ade80)}
+@keyframes prFloat{50%{transform:translateY(-5px) scale(1.06)}}
+#tab-protection pre{white-space:pre-wrap;font-size:10px;line-height:1.6;margin-top:8px;user-select:text;word-break:break-all}
+#tab-protection summary{cursor:pointer}
+@media(prefers-reduced-motion:reduce){.lk-ring,.lk-glow,.lk-dot .core,.lk-logo{animation:none}.lk-shake.shake{animation-duration:.01s}}
 </style>
 </head>
 <body>
 <div class="stars"></div>
 <div class="pulse"></div>
 <div id="scrim"></div>
+
+<div id="lock" role="dialog" aria-modal="true" aria-label="wolfchat lock">
+  <div class="lk-shake" id="lkShake">
+    <canvas id="lkFx"></canvas>
+    <div class="lk-glow"></div>
+    <div class="lk-stage">
+      <div class="lk-logo">wolfchat<span>.</span></div>
+      <div class="lk-sub" id="lkSub">waking up...</div>
+      <div class="lk-wrap" id="lkWrap">
+        <div class="lk-ring"></div><div class="lk-ring r2"></div>
+        <div class="lk-grid" id="lkGrid"><svg class="lk-svg" id="lkSvg"><polyline id="lkLine" points=""/><line id="lkLive" x1="0" y1="0" x2="0" y2="0"/></svg></div>
+      </div>
+      <div class="lk-pips" id="lkPips" hidden></div>
+      <div class="lk-msg" id="lkMsg"></div>
+      <div class="lk-count" id="lkCount"></div>
+      <button id="lkBtn" hidden>retry</button>
+      <button id="lkSkip" hidden>not now</button>
+    </div>
+  </div>
+</div>
+<script>setTimeout(function(){if(window.__lkOk)return;var s=document.getElementById("lkSub");if(s)s.textContent="couldn't load. check your connection and refresh";},12000);</script>
 
 <div class="app">
   <header>
@@ -441,6 +530,7 @@ select{width:100%;padding:8px;background:#000;color:var(--tx);border:2px solid v
     <button class="tab" data-tab="games">games</button>
     <button class="tab" data-tab="updates">updates</button>
     <button class="tab" data-tab="account">account</button>
+    <button class="tab" data-tab="protection" id="tabProt" hidden>protection</button>
   </nav><button id="closePanel" title="close (esc)">✕</button></div><div class="scont"><div class="ph"><b>settings</b></div>
 
   <section class="tc active" id="tab-music">
@@ -566,6 +656,23 @@ select{width:100%;padding:8px;background:#000;color:var(--tx);border:2px solid v
     <h3 style="margin-top:20px">account</h3>
     <div class="box" id="acctMail"></div>
     <button class="wide" id="logoutBtn">log out</button>
+  </section>
+
+  <section class="tc" id="tab-protection">
+    <h3>protection</h3>
+    <div id="prLock">🔒</div>
+    <div class="box" id="prStat"></div>
+    <button class="wide" id="prSet">set lock</button>
+    <button class="wide" id="prToggle" hidden>turn lock off</button>
+    <button class="wide" id="prReset" hidden>reset lock</button>
+    <div class="box">the lock shows every time the tab loads, for everyone including you. 10 wrong tries = 5 minute wait, then the tries come back. changing, resetting or toggling the lock also refills everyone's tries.<br><br>reset = remove the lock completely and start over. if you ever forget the pattern, delete the <b>siteLock</b> node in the firebase console.</div>
+    <details class="box"><summary>firebase rule needed (one time)</summary>
+      <pre>"siteLock": {
+  ".read": true,
+  ".write": "auth != null &amp;&amp; root.child('uidMap').child(auth.uid).val() === 'wolf'"
+}</pre>
+      add this next to your other rules (inside "rules"). the lock must be readable before anyone logs in, but only wolf can change it.
+    </details>
   </section>
 
   <section class="tc" id="tab-updates">
@@ -729,11 +836,14 @@ const PKEY = pkey(ACTIVE);
 const accIds = () => { try { return JSON.parse(localStorage.getItem("wc_accts")) || []; } catch { return []; } };
 const saveAccs = l => localStorage.setItem("wc_accts", JSON.stringify([...new Set(l)]));
 const accProfile = id => { try { return JSON.parse(localStorage.getItem(pkey(id))); } catch { return null; } };
-const switchTo = id => { localStorage.setItem("wc_active", id); location.reload(); };
+const switchTo = id => { localStorage.setItem("wc_active", id); lockPass(); location.reload(); };
 const messagesRef = ref(db, "messages");
 const messagesQuery = query(messagesRef, limitToLast(100));
 const LASTFM_KEY = "c08ea0f29eef2eec1c27b99a86afe75d";
 const OWNER = "wolf";
+/* wolflock state + helpers used by account switching (full logic lives at the bottom of this script) */
+const L = { unlocked: false, cfg: null, loaded: false, rules: false, mode: "verify", first: null, path: [], drawing: false, busy: false, pt: null, prompted: false, cancel: false, timer: 0, warned: false };
+function lockPass() { try { if (L.unlocked) sessionStorage.setItem("wc_lock_pass", Date.now()); } catch {} }
 const BOOKMARKED = ["echidna", "navidson", "shirou"];
 
 const $ = id => document.getElementById(id);
@@ -865,6 +975,7 @@ function setMe(p) {
   me = p; localStorage.setItem(PKEY, JSON.stringify(me));
   $("first").classList.remove("active");
   hydrate(); paintUbar(); start();
+  try { lockOwner(); } catch {}
 }
 
 function hydrate() {
@@ -2060,7 +2171,7 @@ $("renameBtn").onclick = async () => {
     if (Object.keys(up).length) await update(ref(db), up);
     await set(ref(db, "uidMap/" + auth.currentUser.uid), n);
     await remove(ref(db, "profiles/" + old));
-    me = np; await pushProfile(); location.reload();
+    me = np; await pushProfile(); lockPass(); location.reload();
   } catch (e) { console.error(e); toast("couldn't change username", 3000); }
 };
 
@@ -2274,7 +2385,7 @@ $("logoutBtn").onclick = $("logout2").onclick = () => {
   localStorage.removeItem(PKEY); localStorage.removeItem("wc_prev");
   const rest = accIds().filter(i => i !== ACTIVE && accProfile(i)?.name);
   saveAccs(rest); localStorage.setItem("wc_active", rest[0] || "main");
-  signOut(auth).finally(() => location.reload());
+  signOut(auth).finally(() => { lockPass(); location.reload(); });
 };
 
 async function gate(u) {
@@ -3610,6 +3721,267 @@ fill = function (el, key, m) {
   } catch {}
 };
 }
+/* ===================================================================
+   wolflock: 9-dot pattern lock. the lock lives in firebase at "siteLock"
+   (hash only, never the pattern) so it applies to everyone. only wolf can write it.
+   =================================================================== */
+const lockEl = $("lock"), lkGrid = $("lkGrid"), lkLine = $("lkLine"), lkLive = $("lkLive");
+const lkSub = $("lkSub"), lkMsg = $("lkMsg"), lkCount = $("lkCount"), lkPips = $("lkPips");
+const lkDots = [], AK = "wc_lock_att", MAXTRY = 10, WAIT = 5 * 60 * 1000;
+for (let i = 0; i < 9; i++) { const d = document.createElement("i"); d.className = "lk-dot"; d.style.setProperty("--i", i); d.innerHTML = '<s class="halo"></s><b class="core"></b>'; lkGrid.append(d); lkDots.push(d); }
+const lkPipEls = Array.from({ length: MAXTRY }, () => { const p = document.createElement("i"); lkPips.append(p); return p; });
+
+/* ---- sounds (respects the app's mute switch) ---- */
+let LAC;
+const lkAudio = () => { try { LAC = LAC || new (window.AudioContext || window.webkitAudioContext)(); if (LAC.state === "suspended") LAC.resume(); } catch {} return LAC; };
+function tone(f, t0, d, type = "sine", v = .08) {
+  const a = lkAudio(); if (!a || localStorage.getItem("wc_mute") === "1") return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .05);
+}
+const sOk = () => { tone(659, 0, .2, "sine", .09); tone(880, .11, .2, "sine", .09); tone(1318, .22, .55, "sine", .07); };
+const sBad = () => { tone(150, 0, .22, "sawtooth", .05); tone(105, .13, .3, "sawtooth", .05); };
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+
+/* ---- floating particles + success burst ---- */
+const fx = $("lkFx"), cx = fx.getContext("2d");
+let FW = 0, FH = 0, FD = 1, FP = [], FB = [], fxRun = false, fxCol = "#3b82f6";
+function fxSize() { FD = Math.min(devicePixelRatio || 1, 2); FW = fx.width = Math.floor(innerWidth * FD); FH = fx.height = Math.floor(innerHeight * FD); }
+function fxSeed() { FP = Array.from({ length: 55 }, () => ({ x: Math.random() * FW, y: Math.random() * FH, vx: (Math.random() - .5) * .25 * FD, vy: -(.15 + Math.random() * .45) * FD, r: (.8 + Math.random() * 2) * FD, a: .15 + Math.random() * .5, ph: Math.random() * 6.28 })); }
+function fxLoop(t) {
+  if (!fxRun) return;
+  cx.clearRect(0, 0, FW, FH); cx.globalCompositeOperation = "lighter"; cx.fillStyle = fxCol; cx.shadowColor = fxCol; cx.shadowBlur = 10 * FD;
+  for (const p of FP) {
+    p.x += p.vx + Math.sin(t / 1500 + p.ph) * .2 * FD; p.y += p.vy;
+    if (p.y < -10) p.y = FH + 10; if (p.x < -10) p.x = FW + 10; if (p.x > FW + 10) p.x = -10;
+    cx.globalAlpha = p.a * (.6 + .4 * Math.sin(t / 700 + p.ph)); cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.283); cx.fill();
+  }
+  for (let i = FB.length - 1; i >= 0; i--) {
+    const b = FB[i]; b.x += b.vx; b.y += b.vy; b.vx *= .97; b.vy = b.vy * .97 + .04 * FD; b.l--;
+    if (b.l <= 0) { FB.splice(i, 1); continue; }
+    cx.globalAlpha = Math.min(1, b.l / 40); cx.beginPath(); cx.arc(b.x, b.y, b.r, 0, 6.283); cx.fill();
+  }
+  requestAnimationFrame(fxLoop);
+}
+function fxStart() { if (fxRun) return; fxSize(); fxSeed(); fxRun = true; requestAnimationFrame(fxLoop); }
+addEventListener("resize", () => { if (fxRun) { fxSize(); fxSeed(); } });
+function burst() {
+  const r = lkGrid.getBoundingClientRect(), x = (r.left + r.width / 2) * FD, y = (r.top + r.height / 2) * FD;
+  for (let i = 0; i < 90; i++) { const a = Math.random() * 6.283, s = (2 + Math.random() * 8) * FD; FB.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: (1 + Math.random() * 2.5) * FD, l: 50 + Math.random() * 60 }); }
+  const sh = document.createElement("em"); sh.className = "lk-shock"; $("lkWrap").append(sh); setTimeout(() => sh.remove(), 1200);
+}
+
+/* ---- tiny helpers ---- */
+const say = (el, t) => { el.textContent = t; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); };
+const setState = s => { lockEl.dataset.s = s; fxCol = getComputedStyle(lockEl).getPropertyValue("--lk").trim() || "#3b82f6"; };
+function lkShake(cls = "shake") { const s = $("lkShake"); s.classList.remove("shake", "nudge"); void s.offsetWidth; s.classList.add(cls); }
+function inertApp(on) { [...document.body.children].forEach(el => { if (el.id === "lock" || el.tagName === "SCRIPT") return; if (on) { if (!el.inert) { el.inert = true; el.dataset.lki = 1; } } else if (el.dataset.lki) { el.inert = false; delete el.dataset.lki; } }); }
+const ctr = i => { const d = lkDots[i]; return [d.offsetLeft + d.offsetWidth / 2, d.offsetTop + d.offsetHeight / 2]; };
+const lkErr = e => toast(/permission/i.test(e && (e.code || e.message || "")) ? "firebase blocked it. add the siteLock rule (settings > protection)" : "couldn't save the lock", 5000);
+
+/* ---- hashing: pbkdf2 (slow on purpose), tiny fallback if crypto.subtle is missing ---- */
+async function hashPat(p, salt, iter, alg) {
+  const s = String(p), enc = new TextEncoder();
+  if (alg !== "fb" && crypto.subtle) {
+    const k = await crypto.subtle.importKey("raw", enc.encode(s), "PBKDF2", false, ["deriveBits"]);
+    const b = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(salt), iterations: iter || 100000 }, k, 256);
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  let out = "";
+  for (let seed = 0; seed < 4; seed++) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed; const t = salt + "|" + s;
+    for (let r = 0; r < 2000; r++) for (let i = 0; i < t.length; i++) { const c = t.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    out += (h2 >>> 0).toString(16).padStart(8, "0") + (h1 >>> 0).toString(16).padStart(8, "0");
+  }
+  return out;
+}
+
+/* ---- attempts: stored on this device, tied to the lock version so any change refills them ---- */
+const att = () => { try { const a = JSON.parse(localStorage.getItem(AK)); if (a && L.cfg && a.v === L.cfg.v) return a; } catch {} return { v: L.cfg && L.cfg.v, n: 0, until: 0 }; };
+const putAtt = a => { try { localStorage.setItem(AK, JSON.stringify(a)); } catch {} };
+function paintPips() {
+  const n = att().n; lkPips.hidden = L.mode !== "verify";
+  lkPipEls.forEach((p, i) => p.classList.toggle("used", i >= MAXTRY - n));
+  lkPips.classList.toggle("low", MAXTRY - n <= 3);
+}
+
+/* ---- drawing the pattern ---- */
+function lkDraw() {
+  const pts = L.path.map(ctr);
+  lkLine.setAttribute("points", pts.map(p => p.join(",")).join(" "));
+  if (L.drawing && L.pt && pts.length) { const l = pts[pts.length - 1]; lkLive.setAttribute("x1", l[0]); lkLive.setAttribute("y1", l[1]); lkLive.setAttribute("x2", L.pt.x); lkLive.setAttribute("y2", L.pt.y); lkLive.style.opacity = 1; }
+  else lkLive.style.opacity = 0;
+}
+function lkClear() { L.path = []; lkDots.forEach(d => d.classList.remove("on")); lkDraw(); }
+function lkAdd(i) {
+  if (L.path.includes(i)) return;
+  const last = L.path[L.path.length - 1];
+  if (last !== undefined) { // dragging across a dot picks it up too, like android
+    const r1 = last / 3 | 0, c1 = last % 3, r2 = i / 3 | 0, c2 = i % 3;
+    if ((r1 + r2) % 2 === 0 && (c1 + c2) % 2 === 0) { const m = ((r1 + r2) / 2) * 3 + (c1 + c2) / 2; if (m !== i && !L.path.includes(m)) lkAdd(m); }
+  }
+  L.path.push(i); lkDots[i].classList.add("on");
+  const r = document.createElement("em"); r.className = "rip"; lkDots[i].append(r); setTimeout(() => r.remove(), 800); vib(8);
+}
+const lkLocal = e => { const r = lkGrid.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+function lkHit() {
+  const R = lkDots[0].offsetWidth * .36;
+  for (let i = 0; i < 9; i++) { const c = ctr(i); if (Math.hypot(L.pt.x - c[0], L.pt.y - c[1]) < R) lkAdd(i); }
+}
+lkGrid.addEventListener("pointerdown", e => {
+  if (L.busy || L.drawing || !lockEl.classList.contains("ready")) return;
+  e.preventDefault(); lkAudio(); try { lkGrid.setPointerCapture(e.pointerId); } catch {}
+  lkClear(); L.drawing = true; L.pt = lkLocal(e); lkHit(); lkDraw();
+  say(lkMsg, "");
+});
+lkGrid.addEventListener("pointermove", e => { if (!L.drawing) return; L.pt = lkLocal(e); lkHit(); lkDraw(); });
+const lkEnd = () => { if (!L.drawing) return; L.drawing = false; L.pt = null; lkDraw(); lkSubmit(); };
+lkGrid.addEventListener("pointerup", lkEnd); lkGrid.addEventListener("pointercancel", lkEnd);
+lockEl.addEventListener("contextmenu", e => e.preventDefault());
+
+/* ---- outcomes ---- */
+function lkWrong(text, ms = 950) {
+  L.busy = true; setState("bad"); sBad(); lkShake(); vib([70, 40, 70]); say(lkMsg, text);
+  return new Promise(r => setTimeout(() => { lkClear(); setState(""); r(); }, ms));
+}
+function lkWin(kind) {
+  L.busy = true; setState("ok"); sOk(); burst(); vib(30);
+  say(lkSub, kind === "enter" ? "welcome back" : "lock saved"); say(lkMsg, "");
+  if (kind === "enter") {
+    setTimeout(() => lockEl.classList.add("fadeblack"), 1000); // fade the tab to black...
+    setTimeout(openApp, 1950);                                  // ...then wolfchat fades in
+  } else setTimeout(() => hideLock(), 1500);
+}
+function hideLock() {
+  lockEl.classList.add("gone"); inertApp(false); clearInterval(L.timer);
+  setTimeout(() => { if (lockEl.classList.contains("gone")) fxRun = false; }, 1200);
+}
+function openApp() {
+  L.unlocked = true; document.body.classList.add("wc-reveal"); hideLock();
+  setTimeout(() => document.body.classList.remove("wc-reveal"), 1800);
+  maybePrompt();
+}
+function goOut(until) {
+  lockEl.classList.add("out"); L.busy = true; setState("bad"); say(lkSub, "too many attempts"); say(lkMsg, "the door is locked for a bit");
+  const tick = () => {
+    const left = until - Date.now();
+    if (left <= 0) {
+      clearInterval(L.timer); putAtt({ v: L.cfg.v, n: 0, until: 0 }); lockEl.classList.remove("out");
+      L.busy = false; setState(""); lkClear(); paintPips(); lkCount.textContent = ""; say(lkSub, "draw your pattern to enter"); say(lkMsg, "you can try again"); return;
+    }
+    const s = Math.ceil(left / 1000); lkCount.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  };
+  clearInterval(L.timer); tick(); L.timer = setInterval(tick, 250);
+}
+
+async function lkVerify(p) {
+  L.busy = true;
+  let a = att();
+  if (a.until > Date.now()) { lkClear(); return goOut(a.until); }
+  if (a.until) a = { v: L.cfg.v, n: 0, until: 0 };
+  let ok = false;
+  try { ok = (await hashPat(p.join("-"), L.cfg.salt, L.cfg.iter, L.cfg.alg)) === L.cfg.hash; } catch {}
+  if (ok) { putAtt({ v: L.cfg.v, n: 0, until: 0 }); return lkWin("enter"); }
+  a.n++; if (a.n >= MAXTRY) a.until = Date.now() + WAIT;
+  putAtt(a); paintPips();
+  await lkWrong(a.until ? "wrong pattern" : "wrong pattern · " + (MAXTRY - a.n) + " attempt" + (MAXTRY - a.n === 1 ? "" : "s") + " left");
+  if (a.until) goOut(a.until); else L.busy = false;
+}
+async function lkSave(pathStr) {
+  L.busy = true;
+  try {
+    const salt = [...crypto.getRandomValues(new Uint8Array(12))].map(x => x.toString(16).padStart(2, "0")).join(""), alg = crypto.subtle ? "pbkdf2" : "fb", iter = 100000;
+    const val = { hash: await hashPat(pathStr, salt, iter, alg), salt, iter, alg, v: Date.now(), off: false, by: OWNER };
+    await set(ref(db, "siteLock"), val);
+    L.cfg = val; L.rules = false; try { localStorage.removeItem(AK); } catch {} paintProt(); lkWin("saved");
+  } catch (e) {
+    lkErr(e); L.mode = "setA"; L.first = null;
+    await lkWrong(/permission/i.test(e && (e.code || e.message || "")) ? "firebase blocked the save (see protection tab)" : "couldn't save, try again", 2200);
+    say(lkSub, "set a lock pattern · connect at least 4 dots"); L.busy = false;
+  }
+}
+async function lkSubmit() {
+  const p = L.path.slice();
+  if (p.length < 4) { L.busy = true; setState("bad"); lkShake("nudge"); say(lkMsg, "connect at least 4 dots"); setTimeout(() => { lkClear(); setState(""); L.busy = false; }, 800); return; }
+  if (L.mode === "verify") return lkVerify(p);
+  if (L.mode === "setA") {
+    L.first = p.join("-"); L.busy = true; setState("ok");
+    setTimeout(() => { lkClear(); setState(""); L.mode = "setB"; say(lkSub, "draw it again to confirm"); say(lkMsg, ""); L.busy = false; }, 650);
+    return;
+  }
+  if (p.join("-") === L.first) return lkSave(L.first);
+  L.mode = "setA"; L.first = null;
+  await lkWrong("doesn't match · start over");
+  say(lkSub, "set a lock pattern · connect at least 4 dots"); L.busy = false;
+}
+
+/* ---- showing the lock (verify at load, or setup for wolf) ---- */
+function showLock(mode, o = {}) {
+  L.mode = mode; L.first = null; L.busy = false; L.drawing = false; L.cancel = !!o.cancel;
+  clearInterval(L.timer); lkClear(); setState(""); lkCount.textContent = "";
+  lockEl.classList.remove("gone", "fadeblack", "out", "ready"); inertApp(true);
+  $("lkSkip").hidden = !o.cancel; $("lkBtn").hidden = true;
+  void lockEl.offsetWidth; lockEl.classList.add("ready"); fxStart(); paintPips();
+  if (mode === "verify") {
+    say(lkSub, "draw your pattern to enter"); say(lkMsg, "");
+    const a = att(); if (a.until > Date.now()) goOut(a.until); else if (a.until) putAtt({ v: L.cfg.v, n: 0, until: 0 });
+    paintPips();
+  } else { say(lkSub, "set a lock pattern · connect at least 4 dots"); say(lkMsg, o.note || ""); }
+}
+$("lkSkip").onclick = () => { if (L.mode === "verify") return; try { sessionStorage.setItem("wc_lock_dismiss", 1); } catch {} hideLock(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && L.cancel && L.mode !== "verify" && !lockEl.classList.contains("gone")) $("lkSkip").click(); });
+
+/* ---- boot: read the lock, then either ask for the pattern or just fade in ---- */
+const passOk = () => { try { const t = +sessionStorage.getItem("wc_lock_pass"); sessionStorage.removeItem("wc_lock_pass"); return !!t && Date.now() - t < 20000; } catch { return false; } };
+async function lockInit() {
+  window.__lkOk = true; fxStart(); $("lkBtn").hidden = true; say(lkSub, "waking up...");
+  const pass = passOk();
+  try { const s = await get(ref(db, "siteLock")); L.cfg = s.exists() ? s.val() : null; }
+  catch (e) {
+    if (/permission/i.test(e && (e.code || e.message || ""))) { L.rules = true; L.cfg = null; }
+    else { say(lkSub, "can't reach the server"); $("lkBtn").hidden = false; return; }
+  }
+  L.loaded = true; paintProt();
+  if (L.cfg && L.cfg.hash && !L.cfg.off && !pass) return showLock("verify");
+  openApp();
+}
+$("lkBtn").onclick = lockInit;
+
+/* ---- wolf only: first-time prompt + settings > protection ---- */
+function maybePrompt() {
+  if (!L.unlocked || !L.loaded || typeof me === "undefined" || !me || me.name !== OWNER) return;
+  if (L.rules) { if (!L.warned) { L.warned = true; toast("lock: add the siteLock rule in firebase (settings > protection)", 6000); } return; }
+  if (L.cfg || L.prompted) return;
+  try { if (sessionStorage.getItem("wc_lock_dismiss")) return; } catch {}
+  L.prompted = true; setTimeout(() => showLock("setA", { cancel: true, note: "only you see this. everyone will need it to enter." }), 1200);
+}
+function lockOwner() { const o = !!me && me.name === OWNER; $("tabProt").hidden = !o; if (o) { paintProt(); maybePrompt(); } }
+function paintProt() {
+  const c = L.cfg, on = !!(c && c.hash && !c.off); let t;
+  if (L.rules) t = "⚠️ can't reach the lock settings. add the siteLock rule below in firebase.";
+  else if (!c) t = "no lock set. everyone can enter freely.";
+  else if (c.off) t = "lock is OFF. everyone enters freely.<br>your pattern is still saved, turn it back on any time.";
+  else t = "lock is ON. everyone (including you) draws the pattern when the tab loads.<br>last changed " + new Date(c.v).toLocaleString();
+  $("prStat").innerHTML = t; $("prLock").textContent = on ? "🔒" : "🔓"; $("prLock").classList.toggle("on", on);
+  $("prSet").textContent = c && c.hash ? "change lock" : "set lock";
+  $("prToggle").hidden = !(c && c.hash); $("prToggle").textContent = c && c.off ? "turn lock on" : "turn lock off";
+  $("prReset").hidden = !c;
+}
+$("prSet").onclick = () => { panelOpen(false); setTimeout(() => showLock("setA", { cancel: true, note: c0() }), 280); };
+const c0 = () => L.cfg && L.cfg.hash ? "this replaces your old pattern" : "";
+$("prToggle").onclick = async () => {
+  if (!L.cfg || !L.cfg.hash) return;
+  try { const v = { ...L.cfg, off: !L.cfg.off, v: Date.now() }; await set(ref(db, "siteLock"), v); L.cfg = v; paintProt(); toast(v.off ? "lock turned off 🔓" : "lock turned on 🔒"); } catch (e) { lkErr(e); }
+};
+$("prReset").onclick = async () => {
+  if (!confirm("reset the lock? this removes it completely (everyone can enter) and you'll pick a brand new pattern.")) return;
+  try { await remove(ref(db, "siteLock")); L.cfg = null; try { localStorage.removeItem(AK); } catch {} paintProt(); toast("lock reset"); panelOpen(false); setTimeout(() => showLock("setA", { cancel: true, note: "pick a new pattern" }), 280); } catch (e) { lkErr(e); }
+};
+lockInit();
+
 onAuthStateChanged(auth, gate);
 </script>
 </body>
