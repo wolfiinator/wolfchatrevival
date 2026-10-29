@@ -475,6 +475,23 @@ body.wc-reveal .app{animation:wcIn 1.6s cubic-bezier(.2,.8,.2,1) both}
 #tab-protection pre{white-space:pre-wrap;font-size:10px;line-height:1.6;margin-top:8px;user-select:text;word-break:break-all}
 #tab-protection summary{cursor:pointer}
 @media(prefers-reduced-motion:reduce){.lk-ring,.lk-glow,.lk-dot .core,.lk-logo{animation:none}.lk-shake.shake{animation-duration:.01s}}
+/* site lockdown */
+#down{position:fixed;inset:0;z-index:100000;background:#000;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center}
+#down.on{display:flex;animation:pop .35s ease}
+#down .dn-in{max-width:min(640px,92vw)}
+#down h1{margin:0 0 16px;font-size:clamp(17px,3.2vw,28px);font-weight:600;line-height:1.35;word-break:break-word}
+#down ul{margin:0;padding:0;list-style:none;font-size:clamp(12px,1.8vw,15px);line-height:1.8;opacity:.75;text-align:left;display:inline-block}
+#down li{position:relative;padding-left:16px;word-break:break-word}
+#down li::before{content:"*";position:absolute;left:0}
+#dnOwner{position:absolute;bottom:18px;left:0;right:0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;opacity:.5;transition:opacity .2s}
+#dnOwner:hover{opacity:1}
+#dnOwner[hidden],#dnDot[hidden]{display:none}
+#dnDot{position:absolute;right:10px;bottom:10px;width:30px;height:30px;padding:0;border-radius:50%;background:none;border:0;color:#fff;opacity:.12;font-size:18px;cursor:pointer}
+#dnDot:hover{opacity:.7}
+#dim{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.5);pointer-events:none;opacity:0;transition:opacity .4s}
+#dim.on{opacity:1}
+#lockedTag{align-self:center;font-size:9px;letter-spacing:.5px;opacity:.65;margin-left:-4px}
+#dnStat{line-height:1.8}
 </style>
 </head>
 <body>
@@ -503,9 +520,16 @@ body.wc-reveal .app{animation:wcIn 1.6s cubic-bezier(.2,.8,.2,1) both}
 </div>
 <script>setTimeout(function(){if(window.__lkOk)return;var s=document.getElementById("lkSub");if(s)s.textContent="couldn't load. check your connection and refresh";},12000);</script>
 
+<div id="dim"></div>
+<div id="down" role="alert" aria-live="polite">
+  <div class="dn-in"><h1 id="dnTitle"></h1><ul id="dnList"></ul></div>
+  <div id="dnOwner" hidden><button id="dnUnlock">unlock site</button><button id="dnOthers">lock for others instead</button></div>
+  <button id="dnDot" hidden title="log in">·</button>
+</div>
+
 <div class="app">
   <header>
-    <div style="display:flex;gap:10px;align-items:center"><button id="menuBtn">☰</button><b class="logo">wolfchat<span>.</span></b></div>
+    <div style="display:flex;gap:10px;align-items:center"><button id="menuBtn">☰</button><b class="logo">wolfchat<span>.</span></b><small id="lockedTag" hidden>locked</small></div>
     <div class="hr"><div id="connEl" class="conn" title="checking connection..."></div></div>
   </header>
   <div class="body"><div id="side"><nav id="rooms"></nav><div id="ubar"><div id="ubMain" tabindex="0" role="button" title="your profile"><span class="ubav"><img id="ubAv" alt=""><img id="ubDecor" class="decor" alt="" hidden><i id="ubDot" class="dot"></i></span><span class="ubtx"><b id="ubName"></b><small id="ubSt"></small></span></div><button id="gear" title="settings">⚙️</button></div></div><div class="col">
@@ -666,8 +690,22 @@ body.wc-reveal .app{animation:wcIn 1.6s cubic-bezier(.2,.8,.2,1) both}
     <button class="wide" id="prToggle" hidden>turn lock off</button>
     <button class="wide" id="prReset" hidden>reset lock</button>
     <div class="box">the lock shows every time the tab loads, for everyone including you. 10 wrong tries = 5 minute wait, then the tries come back. changing, resetting or toggling the lock also refills everyone's tries.<br><br>reset = remove the lock completely and start over. if you ever forget the pattern, delete the <b>siteLock</b> node in the firebase console.</div>
-    <details class="box"><summary>firebase rule needed (one time)</summary>
+    <h3 style="margin-top:22px">site lockdown</h3>
+    <div class="box" id="dnStat"></div>
+    <label>title shown on the black screen</label>
+    <input type="text" id="dnTitleIn" maxlength="140" placeholder="wolfchat is currently undergoing maintenance.">
+    <label>description <span style="opacity:.6">(each line becomes a bullet)</span></label>
+    <textarea id="dnDescIn" maxlength="600" placeholder="we are working on the servers. est: 12 minutes."></textarea>
+    <div class="row"><button id="dnAll">lock for all</button><button id="dnOth">lock for others</button></div>
+    <button class="wide" id="dnSave">save text</button>
+    <button class="wide" id="dnOff" hidden>unlock site</button>
+    <div class="box"><b>lock for all</b>: nobody gets in, including you (you keep an unlock button on the black screen).<br><b>lock for others</b>: everyone else sees the black screen. you still get in, the tab is dimmed and "locked" shows next to the logo. changes hit open tabs instantly.</div>
+    <details class="box"><summary>firebase rules needed (one time)</summary>
       <pre>"siteLock": {
+  ".read": true,
+  ".write": "auth != null &amp;&amp; root.child('uidMap').child(auth.uid).val() === 'wolf'"
+},
+"siteDown": {
   ".read": true,
   ".write": "auth != null &amp;&amp; root.child('uidMap').child(auth.uid).val() === 'wolf'"
 }</pre>
@@ -3934,6 +3972,75 @@ function showLock(mode, o = {}) {
 $("lkSkip").onclick = () => { if (L.mode === "verify") return; try { sessionStorage.setItem("wc_lock_dismiss", 1); } catch {} hideLock(); };
 document.addEventListener("keydown", e => { if (e.key === "Escape" && L.cancel && L.mode !== "verify" && !lockEl.classList.contains("gone")) $("lkSkip").click(); });
 
+/* ===================================================================
+   site lockdown: wolf can shut the whole site ("lock for all") or shut it for everyone
+   except himself ("lock for others"). state lives in firebase at "siteDown" and is
+   listened to live, so open tabs go black instantly.
+   =================================================================== */
+const D = { cfg: null, ready: false, rules: false, authKnown: false, signedIn: false, peek: false };
+const DN_TITLE = "wolfchat is currently undergoing maintenance.", DN_DESC = "we are working on the servers.";
+let dnRes; const dnReady = new Promise(r => dnRes = r);
+const dnDone = () => { if (!D.ready) { D.ready = true; dnRes(); } };
+const isOwner = () => !!me && me.name === OWNER;
+const dnMode = () => D.cfg && (D.cfg.mode === "all" || D.cfg.mode === "others") ? D.cfg.mode : "off";
+function dnInert(on) {
+  [...document.body.children].forEach(el => {
+    if (el.id === "down" || el.tagName === "SCRIPT") return;
+    if (on) { if (!el.inert) { el.inert = true; el.dataset.dki = 1; } }
+    else if (el.dataset.dki) { el.inert = false; delete el.dataset.dki; }
+  });
+}
+function dnApply() {
+  const m = dnMode(), owner = isOwner();
+  const black = m === "all" || (m === "others" && !owner);
+  if (D.peek && (D.signedIn || owner || !black)) D.peek = false;   // login peek only works while signed out
+  const show = black && !D.peek, box = $("down");
+  if (show) {
+    const c = D.cfg || {};
+    $("dnTitle").textContent = c.title || DN_TITLE;
+    const ul = $("dnList"); ul.textContent = "";
+    String(c.desc || "").split("\n").map(x => x.trim()).filter(Boolean).forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
+    ul.hidden = !ul.children.length;
+    if (!box.classList.contains("on")) { document.querySelectorAll("audio,video").forEach(a => { try { a.pause(); } catch {} }); }
+    dnInert(true);
+  } else dnInert(false);
+  box.classList.toggle("on", show);
+  $("dnOwner").hidden = !(show && owner);
+  $("dnDot").hidden = !(show && D.authKnown && !D.signedIn);
+  const dim = m === "others" && owner;
+  $("dim").classList.toggle("on", dim); $("lockedTag").hidden = !dim;
+}
+function paintDown() {
+  const c = D.cfg, m = dnMode(), t = $("dnTitleIn"), d = $("dnDescIn");
+  if (!t.dataset.dirty) t.value = c && c.title ? c.title : DN_TITLE;
+  if (!d.dataset.dirty) d.value = c ? (c.desc || "") : DN_DESC;
+  $("dnStat").innerHTML = D.rules ? "⚠️ can't reach the lockdown settings. add the siteDown rule below in firebase."
+    : m === "all" ? "🔴 site is locked for <b>everyone</b>, including you."
+    : m === "others" ? "🟠 site is locked for <b>others</b>. only you can enter."
+    : "🟢 site is open. everyone can enter.";
+  $("dnOff").hidden = m === "off";
+}
+async function dnSet(mode, msg) {
+  const v = { mode, title: $("dnTitleIn").value.trim().slice(0, 140) || DN_TITLE, desc: $("dnDescIn").value.trim().slice(0, 600), v: Date.now(), by: OWNER };
+  try {
+    await set(ref(db, "siteDown"), v); D.cfg = v; D.rules = false;
+    $("dnTitleIn").dataset.dirty = ""; $("dnDescIn").dataset.dirty = "";
+    dnApply(); paintDown(); toast(msg);
+  } catch (e) { toast(/permission/i.test(e && (e.code || e.message || "")) ? "firebase blocked it. add the siteDown rule (settings > protection)" : "couldn't save the lockdown", 5000); }
+}
+$("dnTitleIn").oninput = e => e.target.dataset.dirty = 1;
+$("dnDescIn").oninput = e => e.target.dataset.dirty = 1;
+$("dnAll").onclick = () => { if (confirm("lock the site for everyone, including you? you'll keep an unlock button on the black screen.")) dnSet("all", "locked for all 🔒"); };
+$("dnOth").onclick = () => dnSet("others", "locked for others 🔒");
+$("dnOff").onclick = () => dnSet("off", "site unlocked 🔓");
+$("dnSave").onclick = () => dnSet(dnMode(), "text saved ✅");
+$("dnUnlock").onclick = () => dnSet("off", "site unlocked 🔓");
+$("dnOthers").onclick = () => dnSet("others", "locked for others 🔒");
+$("dnDot").onclick = () => { D.peek = true; dnApply(); };
+onValue(ref(db, "siteDown"), s => { D.cfg = s.exists() ? s.val() : null; D.rules = false; dnDone(); dnApply(); paintDown(); },
+  e => { D.rules = /permission/i.test(e && (e.code || e.message || "")); dnDone(); paintDown(); });
+onAuthStateChanged(auth, u => { D.authKnown = true; D.signedIn = !!u; dnApply(); });
+
 /* ---- boot: read the lock, then either ask for the pattern or just fade in ---- */
 const passOk = () => { try { const t = +sessionStorage.getItem("wc_lock_pass"); sessionStorage.removeItem("wc_lock_pass"); return !!t && Date.now() - t < 20000; } catch { return false; } };
 async function lockInit() {
@@ -3945,6 +4052,7 @@ async function lockInit() {
     else { say(lkSub, "can't reach the server"); $("lkBtn").hidden = false; return; }
   }
   L.loaded = true; paintProt();
+  await Promise.race([dnReady, new Promise(r => setTimeout(r, 4000))]);   // know the lockdown state before revealing anything
   if (L.cfg && L.cfg.hash && !L.cfg.off && !pass) return showLock("verify");
   openApp();
 }
@@ -3958,7 +4066,7 @@ function maybePrompt() {
   try { if (sessionStorage.getItem("wc_lock_dismiss")) return; } catch {}
   L.prompted = true; setTimeout(() => showLock("setA", { cancel: true, note: "only you see this. everyone will need it to enter." }), 1200);
 }
-function lockOwner() { const o = !!me && me.name === OWNER; $("tabProt").hidden = !o; if (o) { paintProt(); maybePrompt(); } }
+function lockOwner() { dnApply(); const o = !!me && me.name === OWNER; $("tabProt").hidden = !o; if (o) { paintProt(); maybePrompt(); } }
 function paintProt() {
   const c = L.cfg, on = !!(c && c.hash && !c.off); let t;
   if (L.rules) t = "⚠️ can't reach the lock settings. add the siteLock rule below in firebase.";
